@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useSesion } from '../contexto/ContextoSesion.jsx'
 
 const IMAGEN_PORTADA = 'https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1800&q=80'
 
@@ -20,7 +21,29 @@ const zonas = [
   },
 ]
 
-function Home() {
+export function Home() {
+  const navegar = useNavigate()
+  const { usuario, esAdministrador, cerrarSesion } = useSesion()
+
+  function salir() {
+    cerrarSesion()
+    navegar('/login')
+  }
+
+  function pintarZona(zona) {
+    return (
+      <div className="col-md-4" key={zona.nombre}>
+        <div className="card tarjeta-zona shadow-sm h-100">
+          <img src={zona.imagen} className="card-img-top" alt={zona.nombre} />
+          <div className="card-body">
+            <h5 className="card-title fw-bold">{zona.nombre}</h5>
+            <p className="card-text text-muted">{zona.descripcion}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Barra de navegación */}
@@ -29,16 +52,22 @@ function Home() {
           <Link to="/home" className="navbar-brand d-flex align-items-center gap-2 fw-bold">
             <i className="bi bi-buildings-fill fs-4"></i> Paseo App
           </Link>
-          <div className="d-flex gap-2">
-            <Link to="/espacios" className="btn btn-outline-light btn-sm">
-              <i className="bi bi-door-open me-1"></i>Espacios
-            </Link>
+          <div className="d-flex align-items-center gap-2">
+            <span className="text-white-50 small d-none d-md-inline me-2">
+              <i className="bi bi-person-circle me-1"></i>{usuario.nombres} · {usuario.rol}
+            </span>
+            {/* Solo el administrador ve el boton de espacios */}
+            {esAdministrador && (
+              <Link to="/espacios" className="btn btn-outline-light btn-sm">
+                <i className="bi bi-door-open me-1"></i>Espacios
+              </Link>
+            )}
             <Link to="/reservas" className="btn btn-outline-light btn-sm">
               <i className="bi bi-calendar-check me-1"></i>Reservas
             </Link>
-            <Link to="/" className="btn btn-light btn-sm">
+            <button type="button" onClick={salir} className="btn btn-light btn-sm">
               <i className="bi bi-box-arrow-right me-1"></i>Salir
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
@@ -75,17 +104,7 @@ function Home() {
             <p className="text-muted">Conoce los espacios que puedes disfrutar y reservar.</p>
           </div>
           <div className="row g-4">
-            {zonas.map((zona) => (
-              <div className="col-md-4" key={zona.nombre}>
-                <div className="card tarjeta-zona shadow-sm h-100">
-                  <img src={zona.imagen} className="card-img-top" alt={zona.nombre} />
-                  <div className="card-body">
-                    <h5 className="card-title fw-bold">{zona.nombre}</h5>
-                    <p className="card-text text-muted">{zona.descripcion}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {zonas.map(pintarZona)} 
           </div>
         </div>
       </section>

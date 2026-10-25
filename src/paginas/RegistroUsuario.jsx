@@ -2,10 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PanelFormulario from '../componentes/PanelFormulario'
 
+import {guardarUsuario} from '../Services/servicioUsuarios.js'
+import { useSesion } from '../contexto/ContextoSesion.jsx'
+
 const IMAGEN = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1400&q=80'
 
-function RegistroUsuario() {
+export function RegistroUsuario() {
   const navegar = useNavigate()
+  const guardarSesion = useSesion()
 
   const [usuario, setUsuario] = useState({
     nombres: '',
@@ -15,12 +19,12 @@ function RegistroUsuario() {
   })
   const [errores, setErrores] = useState({})
 
-  const manejarCambio = (evento) => {
+    function manejarCambio(evento) {
     const { name, value } = evento.target
     setUsuario({ ...usuario, [name]: value })
   }
 
-  const validar = () => {
+  function validar() {
     const nuevosErrores = {}
     if (usuario.nombres.trim() === '') {
       nuevosErrores.nombres = 'Los nombres son obligatorios'
@@ -37,13 +41,29 @@ function RegistroUsuario() {
     return nuevosErrores
   }
 
-  const manejarEnvio = (evento) => {
-    evento.preventDefault()
-    const nuevosErrores = validar()
+//Función para activar el API y enviarle datos
+  async function manejarEnvio(evento){
+    evento.preventDefault()//evito que se recargue el formulario
+    const nuevosErrores=validar()
     setErrores(nuevosErrores)
-    if (Object.keys(nuevosErrores).length === 0) {
-      console.log('Usuario registrado:', usuario)
+    if(Object.keys(nuevosErrores).length>0){
+      return null
+    }
+
+    //Todo ok voy a a intentar enviar los datos al API
+    setErrorApi('')
+    try{
+      const usuarioGuardado = await guardarUsuario(usuario)
+      //El API devuelve el usuario creado (sin contraseña): lo dejamos logueado
+      guardarSesion(usuarioGuardado)
       navegar('/home')
+
+    }catch(error){
+      //Si el API respondio, el mensaje viene en error.response.data
+      //Usamos || porque Spring puede mandar message vacio ("")
+      const mensaje = error.response?.data?.message
+                   || 'No fue posible registrar el usuario'
+      setErrorApi(mensaje)
     }
   }
 

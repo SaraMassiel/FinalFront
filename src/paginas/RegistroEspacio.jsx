@@ -37,13 +37,19 @@ function RegistroEspacio() {
     return nuevosErrores
   }
 
-  const manejarEnvio = (evento) => {
-    evento.preventDefault()
+//Función para activar el API y enviarle datos
+  async function manejarEnvio (evento) {
+    evento.preventDefault() //Evitar que se recargue el formulario 
     const nuevosErrores = validar()
     setErrores(nuevosErrores)
-    if (Object.keys(nuevosErrores).length === 0) {
-      console.log('Espacio registrado:', { ...espacio, aforo: Number(espacio.aforo) })
-      navegar('/home')
+    if (Object.key(nuevosErrores).length > 0) {
+      return null
+    }
+    try {
+      const espacioGuardado = await guardarEspacio(espacio)
+      navegar ('/home')
+    }catch{
+      setErrores('No fue posible registrar el espacio')
     }
   }
 
