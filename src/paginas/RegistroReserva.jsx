@@ -1,8 +1,11 @@
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PanelFormulario from '../componentes/PanelFormulario'
+import { guardarReserva } from '../Services/servicioReserva.js'
 
-const IMAGEN = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1400&q=80'
+const IMAGEN =
+  'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1400&q=80'
 
 function RegistroReserva() {
   const navegar = useNavigate()
@@ -11,88 +14,178 @@ function RegistroReserva() {
     fecha: '',
     tiempo: '',
   })
+
   const [errores, setErrores] = useState({})
+  const [cargando, setCargando] = useState(false)
+
+  const obtenerFechaLocal = () => {
+    const hoy = new Date()
+    const anio = hoy.getFullYear()
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+    const dia = String(hoy.getDate()).padStart(2, '0')
+
+    return `${anio}-${mes}-${dia}`
+  }
 
   const manejarCambio = (evento) => {
     const { name, value } = evento.target
-    setReserva({ ...reserva, [name]: value })
+
+    setReserva((anterior) => ({
+      ...anterior,
+      [name]: value,
+    }))
+
+    setErrores((anteriores) => ({
+      ...anteriores,
+      [name]: '',
+      general: '',
+    }))
   }
 
   const validar = () => {
     const nuevosErrores = {}
-    const hoy = new Date().toISOString().split('T')[0]
-    if (reserva.fecha === '') {
-      nuevosErrores.fecha = 'La fecha es obligatoria'
-    } else if (reserva.fecha < hoy) {
-      nuevosErrores.fecha = 'La fecha no puede ser anterior a hoy'
+
+    if (!reserva.fecha) {
+      nuevosErrores.fecha = 'Selecciona una fecha.'
+    } else if (reserva.fecha < obtenerFechaLocal()) {
+      nuevosErrores.fecha = 'La fecha no puede ser anterior a hoy.'
     }
-    if (reserva.tiempo === '') {
-      nuevosErrores.tiempo = 'La hora es obligatoria'
+
+    if (!reserva.tiempo) {
+      nuevosErrores.tiempo = 'Selecciona una hora.'
     }
+
     return nuevosErrores
   }
 
-//Función para activar el API y enviarle datos
-  async function manejarEnvio (evento) {
-    evento.preventDefault() //Evitar que se recargue el formulario 
+  async function manejarEnvio(evento) {
+    evento.preventDefault()
+
     const nuevosErrores = validar()
-    if (Object.key(nuevosErrores).length > 0) {
-      return null
+    setErrores(nuevosErrores)
+
+    if (Object.keys(nuevosErrores).length > 0) {
+      return
     }
+
+    setCargando(true)
+
     try {
-      const reservaGuardada = await guardarReserva(reserva)
-      navegar ('/home')
-    }catch{
-      setErrores('No fue posible registrar la reserva')
+      await guardarReserva(reserva)
+      navegar('/home')
+    } catch (error) {
+      setErrores({
+        general:
+          error?.message || 'No fue posible registrar la reserva. Inténtalo nuevamente.',
+      })
+    } finally {
+      setCargando(false)
     }
   }
 
   return (
-    <PanelFormulario
-      imagen={IMAGEN}
-      titulo="Aparta tu espacio"
-      subtitulo="Elige la fecha y la hora, nosotros nos encargamos del resto."
-      enlaceVolver="/home"
-    >
-      <h2 className="fw-bold mb-1">Nueva reserva</h2>
-      <p className="text-muted mb-4">Indica cuándo quieres usar el espacio.</p>
+    <div className="reserva-paseo">
+      <PanelFormulario
+        imagen={IMAGEN}
+        titulo="Un espacio para disfrutar."
+        subtitulo="Elige el día y la hora para disfrutar de las zonas comunes de PASEO."
+        enlaceVolver="/home"
+      >
+        <div className="reserva-paseo-encabezado">
+          <span className="reserva-paseo-etiqueta">
+            <i className="bi bi-calendar2-check" />
+            TU COMUNIDAD, TU ESPACIO
+          </span>
 
-      <form onSubmit={manejarEnvio} noValidate>
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Fecha</label>
-          <div className="input-group has-validation">
-            <span className="input-group-text"><i className="bi bi-calendar-event"></i></span>
-            <input
-              type="date"
-              name="fecha"
-              className={`form-control ${errores.fecha ? 'is-invalid' : ''}`}
-              value={reserva.fecha}
-              onChange={manejarCambio}
-            />
-            <div className="invalid-feedback">{errores.fecha}</div>
-          </div>
+          <h2>Nueva reserva</h2>
+          <p>Planea tu próximo momento especial.</p>
         </div>
 
-        <div className="mb-4">
-          <label className="form-label fw-semibold">Hora</label>
-          <div className="input-group has-validation">
-            <span className="input-group-text"><i className="bi bi-clock"></i></span>
-            <input
-              type="time"
-              name="tiempo"
-              className={`form-control ${errores.tiempo ? 'is-invalid' : ''}`}
-              value={reserva.tiempo}
-              onChange={manejarCambio}
-            />
-            <div className="invalid-feedback">{errores.tiempo}</div>
+        {errores.general && (
+          <div className="reserva-paseo-error" role="alert">
+            <i className="bi bi-exclamation-circle" />
+            {errores.general}
           </div>
-        </div>
+        )}
 
-        <button type="submit" className="btn btn-marca btn-lg w-100">
-          <i className="bi bi-calendar-check me-2"></i>Confirmar reserva
-        </button>
-      </form>
-    </PanelFormulario>
+        <form onSubmit={manejarEnvio} noValidate>
+          <div className="reserva-paseo-campo">
+            <label htmlFor="fecha">Fecha de uso</label>
+
+            <div className={`reserva-paseo-input ${errores.fecha ? 'tiene-error' : ''}`}>
+              <i className="bi bi-calendar-event" />
+              <input
+                id="fecha"
+                type="date"
+                name="fecha"
+                min={obtenerFechaLocal()}
+                value={reserva.fecha}
+                onChange={manejarCambio}
+                aria-invalid={Boolean(errores.fecha)}
+                aria-describedby={errores.fecha ? 'error-fecha' : undefined}
+              />
+            </div>
+
+            {errores.fecha && (
+              <small id="error-fecha" className="reserva-paseo-ayuda-error">
+                {errores.fecha}
+              </small>
+            )}
+          </div>
+
+          <div className="reserva-paseo-campo">
+            <label htmlFor="tiempo">Hora de inicio</label>
+
+            <div className={`reserva-paseo-input ${errores.tiempo ? 'tiene-error' : ''}`}>
+              <i className="bi bi-clock" />
+              <input
+                id="tiempo"
+                type="time"
+                name="tiempo"
+                value={reserva.tiempo}
+                onChange={manejarCambio}
+                aria-invalid={Boolean(errores.tiempo)}
+                aria-describedby={errores.tiempo ? 'error-tiempo' : undefined}
+              />
+            </div>
+
+            {errores.tiempo && (
+              <small id="error-tiempo" className="reserva-paseo-ayuda-error">
+                {errores.tiempo}
+              </small>
+            )}
+          </div>
+
+          <div className="reserva-paseo-nota">
+            <i className="bi bi-info-circle" />
+            <p>Verifica la fecha y la hora antes de confirmar tu solicitud.</p>
+          </div>
+
+          <button
+            type="submit"
+            className="reserva-paseo-boton"
+            disabled={cargando}
+          >
+            {cargando ? (
+              <>
+                <span className="reserva-paseo-spinner" />
+                Registrando reserva...
+              </>
+            ) : (
+              <>
+                Confirmar reserva
+                <i className="bi bi-arrow-right" />
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="reserva-paseo-pie">
+          <i className="bi bi-shield-check" />
+          Una experiencia más sencilla, en comunidad.
+        </p>
+      </PanelFormulario>
+    </div>
   )
 }
 

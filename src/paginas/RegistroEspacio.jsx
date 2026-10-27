@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PanelFormulario from '../componentes/PanelFormulario'
+import { guardarEspacio } from '../Services/servicioEspacio.js'
 
 const IMAGEN = 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1400&q=80'
 
@@ -28,7 +29,7 @@ function RegistroEspacio() {
     if (espacio.descripcion.trim().length < 10) {
       nuevosErrores.descripcion = 'La descripción debe tener mínimo 10 caracteres'
     }
-    if (!/^https?:\/\/\S+$/.test(espacio.foto)) {
+    if (!/^https?:\/\/\S+$/.test(espacio.foto.trim())) {
       nuevosErrores.foto = 'Ingrese una URL válida (http:// o https://)'
     }
     if (espacio.aforo === '' || Number(espacio.aforo) <= 0) {
@@ -48,8 +49,11 @@ function RegistroEspacio() {
     try {
       const espacioGuardado = await guardarEspacio(espacio)
       navegar ('/home')
-    }catch{
-      setErrores('No fue posible registrar el espacio')
+    } catch (error) {
+      console.error('Error al registrar el espacio:', error)
+      setErrores({
+        general: 'No fue posible registrar el espacio. Intenta nuevamente.',
+      })
     }
   }
 
@@ -128,6 +132,12 @@ function RegistroEspacio() {
             <div className="invalid-feedback">{errores.aforo}</div>
           </div>
         </div>
+
+        {errores.general && (
+          <div className="alert alert-danger" role="alert">
+            {errores.general}
+          </div>
+        )}
 
         <button type="submit" className="btn btn-marca btn-lg w-100">
           <i className="bi bi-save me-2"></i>Guardar espacio

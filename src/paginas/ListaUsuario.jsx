@@ -1,7 +1,7 @@
 import { usuarios } from '../Services/datosUsuario' 
 import { TarjetaUsuario } from '../componentes/TarjetaUsuario' 
 import { useEffect, useState } from 'react'
-import { listarUsuario } from '../Services/servicioUsuarios'
+import { listarUsuarios } from '../Services/servicioUsuarios.js'
 
 export function ListaUsuario () {
     return (

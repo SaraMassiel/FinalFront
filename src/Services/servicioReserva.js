@@ -1,4 +1,4 @@
-import {clienteApi} from './ClienteApi';
+import clienteApi from './ClienteApi.js';
 
 const RUTA = '/reservas'
 

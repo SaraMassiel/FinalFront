@@ -8,6 +8,9 @@ import { ListaReserva } from './paginas/ListaReserva'
 import { ListaUsuario } from './paginas/ListaUsuario'
 import { ProveedorSesion } from './contexto/ContextoSesion'
 import {Login} from './paginas/Login'
+import { Navigate } from 'react-router-dom'
+import { RutaPrivada } from './rutas/RutaPrivada.jsx'
+import { RutaPorRol } from './rutas/RutaPorRol.jsx'
 
 function App() {
   return (

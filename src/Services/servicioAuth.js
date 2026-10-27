@@ -1,18 +1,11 @@
-import { listarUsuarios } from './servicioUsuarios'
 
-export async function iniciarSesion (correo, contraseña) {
-    const usuarios = await listarUsuarios()
+import clienteApi from './ClienteApi.js'
 
-    function evaluarElMismoCorreo (usuario) {
-        return usuario.correo.toLowerCase() == correo.toLowerCase()
-    }
+export async function iniciarSesion(correo, contraseña) {
+  const respuesta = await clienteApi.post('/usuarios/login', {
+    correo: correo.trim(),
+    contraseña
+  })
 
-    const usuarioEncontrado = usuarios.find(evaluarElMismoCorreo)
-
-    if (!usuarioEncontrado) {
-        throw new Error('correo o contraseña incorrectos')
-    }
-
-    return usuarioEncontrado
+  return respuesta.data
 }
-
